@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MirrUp (検証用プロトタイプ)</title>
+    <style>
+        body {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; font-family: sans-serif; background-color: #f0f4f8; color: #333;
+        }
+        .header { text-align: center; margin-bottom: 20px; }
+        .title { font-size: 28px; font-weight: 900; margin: 0; }
+        .title span { color: #00c853; }
+        
+        /* LINE誘導のメッセージカード */
+        .mission-card {
+            background-color: #e8f5e9; border: 2px solid #00c853; border-radius: 12px;
+            padding: 15px; width: 280px; text-align: center; margin-bottom: 25px;
+        }
+        .mission-card h3 { margin:0 0 5px 0; color: #2e7d32; font-size: 15px;}
+        .mission-card p { margin:0; font-size: 12px; color: #1b5e20; line-height: 1.4;}
+
+        .action-button {
+            padding: 20px 40px; font-size: 20px; font-weight: bold; cursor: pointer;
+            border-radius: 12px; border: none; background-color: #00c853; color: white;
+            box-shadow: 0 4px 10px rgba(0,200,83,0.3); transition: 0.2s;
+        }
+        .action-button:disabled { background-color: #ccc; box-shadow: none;}
+
+        .log-box {
+            margin-top: 30px; width: 300px; max-height: 150px; overflow-y: auto;
+            background: white; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px;
+        }
+        ul { padding-left: 20px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 class="title">MirrUp<span>.</span></h1>
+        <div style="font-size:12px; color:#666;">2秒学習ロガー（テスト版）</div>
+    </div>
+
+    <!-- 被験者に「次に何をするか」を伝える大事なUI -->
+    <div class="mission-card">
+        <h3>⚡ 本日のミッション</h3>
+        <p>下のボタンを押して2秒カウントが鳴ったら、<b>そのままスマホのカメラで机の上を2秒動画撮影して、LINEグループに送信してください！</b></p>
+    </div>
+
+    <button class="action-button" id="flash-btn">⚡ 記録する (2秒)</button>
+
+    <div class="log-box">
+        <div style="font-weight:bold; font-size:12px; color:#888;">あなたの打刻タイムライン</div>
+        <ul id="log-list"></ul>
+    </div>
+
+    <script>
+        const btn = document.getElementById('flash-btn');
+        const list = document.getElementById('log-list');
+        let logs = JSON.parse(localStorage.getItem('mirrup_mvp_logs')) || [];
+
+        function render() {
+            list.innerHTML = '';
+            logs.forEach(t => {
+                const li = document.createElement('li'); li.textContent = t; list.appendChild(li);
+            });
+        }
+        render();
+
+        btn.addEventListener('click', () => {
+            btn.disabled = true; let s = 2; btn.textContent = `撮影準備... ${s}`;
+            const timer = setInterval(() => {
+                s--;
+                if(s > 0) btn.textContent = `撮影準備... ${s}`;
+                else {
+                    clearInterval(timer);
+                    btn.textContent = "⚡ 記録する (2秒)"; btn.disabled = false;
+                    
+                    const timeStr = new Date().toLocaleTimeString();
+                    logs.unshift(`${timeStr} ⚡ 打刻完了`);
+                    localStorage.setItem('mirrup_mvp_logs', JSON.stringify(logs));
+                    render();
+
+                    // 自動でLINEグループに動画を送りたくなるようアラートを出す
+                    alert("【記録セーブ完了！】\nそのままスマホのカメラを開いて、机の上の2秒動画をLINEグループにポンと送ってね！");
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
